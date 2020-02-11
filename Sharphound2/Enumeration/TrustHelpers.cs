@@ -4,9 +4,9 @@ using System.Diagnostics.CodeAnalysis;
 using System.DirectoryServices.Protocols;
 using System.Linq;
 using System.Runtime.InteropServices;
-using Sharphound2.JsonObjects;
+using Ingestor.JsonObjects;
 
-namespace Sharphound2.Enumeration
+namespace Ingestor.Enumeration
 {
     [SuppressMessage("ReSharper", "UnusedMember.Local")]
     internal static class TrustHelpers
@@ -27,10 +27,10 @@ namespace Sharphound2.Enumeration
                 return;
 
             var trusts = new List<Trust>();
-            var dc = _utils.GetUsableDomainController(_utils.GetDomain(resolved.BloodHoundDisplay));
+            var dc = _utils.GetUsableDomainController(_utils.GetDomain(resolved.IngestCacheDisplay));
             //var dc = _utils
             //    .DoSearch("(userAccountControl:1.2.840.113556.1.4.803:=8192)", SearchScope.Subtree,
-            //        new[] { "dnshostname" }, resolved.BloodHoundDisplay).DefaultIfEmpty(null).FirstOrDefault();
+            //        new[] { "dnshostname" }, resolved.IngestCacheDisplay).DefaultIfEmpty(null).FirstOrDefault();
 
             if (dc == null)
                 return;
@@ -95,7 +95,8 @@ namespace Sharphound2.Enumeration
 
                 // parentChild occure only when one of the domain is the forest root
                 // Check is trusted domain is the current forest root or if trusted domain's parent is current enumerated domain
-                if (((trustFlags & TrustFlags.DsDomainTreeRoot) == TrustFlags.DsDomainTreeRoot) && ((trustFlags & TrustFlags.DsDomainInForest) == TrustFlags.DsDomainInForest) || array[data.ParentIndex].DnsDomainName?.ToUpper() == resolved.BloodHoundDisplay)
+                if (((trustFlags & TrustFlags.DsDomainTreeRoot) == TrustFlags.DsDomainTreeRoot) && ((trustFlags & TrustFlags.DsDomainInForest) == TrustFlags.DsDomainInForest)
+    || array[data.ParentIndex].DnsDomainName.ToUpper() == resolved.IngestCacheDisplay)
                 {
                     trust.TrustType = "ParentChild";
                 }

@@ -6,10 +6,10 @@ using System.DirectoryServices.Protocols;
 using System.Linq;
 using System.Security.AccessControl;
 using System.Security.Principal;
-using Sharphound2.JsonObjects;
+using Ingestor.JsonObjects;
 using SearchScope = System.DirectoryServices.Protocols.SearchScope;
 
-namespace Sharphound2.Enumeration
+namespace Ingestor.Enumeration
 {
     internal static class AclHelpers
     {

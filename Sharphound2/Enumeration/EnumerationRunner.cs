@@ -8,11 +8,11 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
-using Sharphound2.JsonObjects;
-using static Sharphound2.Sharphound;
-using Session = Sharphound2.JsonObjects.Session;
+using Ingestor.JsonObjects;
+using static Ingestor.Ingestor;
+using Session = Ingestor.JsonObjects.Session;
 
-namespace Sharphound2.Enumeration
+namespace Ingestor.Enumeration
 {
     internal class EnumerationRunner
     {
@@ -99,7 +99,7 @@ namespace Sharphound2.Enumeration
                     {
                         var obj = new User
                         {
-                            Name = resolved.BloodHoundDisplay
+                            Name = resolved.IngestCacheDisplay
                         };
 
                         obj.Properties.Add("domain", domain);
@@ -118,7 +118,7 @@ namespace Sharphound2.Enumeration
                     {
                         var obj = new Group
                         {
-                            Name = resolved.BloodHoundDisplay
+                            Name = resolved.IngestCacheDisplay
                         };
                         
                         obj.Properties.Add("domain", domain);
@@ -148,7 +148,7 @@ namespace Sharphound2.Enumeration
                     {
                         var obj = new Computer
                         {
-                            Name = resolved.BloodHoundDisplay,
+                            Name = resolved.IngestCacheDisplay,
                         };
 
 
@@ -163,7 +163,7 @@ namespace Sharphound2.Enumeration
                             _entDcs.Enqueue(new GroupMember
                             {
                                 MemberType = "computer",
-                                MemberName = resolved.BloodHoundDisplay
+                                MemberName = resolved.IngestCacheDisplay
                             });
                         }
 
@@ -180,7 +180,7 @@ namespace Sharphound2.Enumeration
                     {
                         var obj = new Domain
                         {
-                            Name = resolved.BloodHoundDisplay,
+                            Name = resolved.IngestCacheDisplay,
                         };
 
                         obj.Properties.Add("objectsid", sid);
@@ -200,7 +200,7 @@ namespace Sharphound2.Enumeration
                     {
                         var obj = new Gpo
                         {
-                            Name = resolved.BloodHoundDisplay,
+                            Name = resolved.IngestCacheDisplay,
                             Guid = entry.GetProp("name").Replace("{", "").Replace("}", "")
                         };
 
@@ -228,7 +228,7 @@ namespace Sharphound2.Enumeration
                             Guid = new Guid(entry.GetPropBytes("objectguid")).ToString().ToUpper()
                         };
 
-                        obj.Properties.Add("name", resolved.BloodHoundDisplay.ToUpper());
+                        obj.Properties.Add("name", resolved.IngestCacheDisplay.ToUpper());
                         obj.Properties.Add("highvalue", false);
 
                         ContainerHelpers.ResolveContainer(entry, resolved, ref obj);
@@ -245,7 +245,7 @@ namespace Sharphound2.Enumeration
                     Console.WriteLine("Doing stealth session enumeration");
                     foreach (var target in SessionHelpers.CollectStealthTargets(domainName))
                     {
-                        if (!_utils.PingHost(target.BloodHoundDisplay))
+                        if (!_utils.PingHost(target.IngestCacheDisplay))
                         {
                             _noPing++;
                             continue;
@@ -392,7 +392,7 @@ namespace Sharphound2.Enumeration
                     {
                         foreach (var target in SessionHelpers.CollectStealthTargets(domain))
                         {
-                            if (!_utils.PingHost(target.BloodHoundDisplay))
+                            if (!_utils.PingHost(target.IngestCacheDisplay))
                             {
                                 _noPing++;
                                 continue;
@@ -892,7 +892,7 @@ namespace Sharphound2.Enumeration
 
                     var full = new ResolvedEntry
                     {
-                        BloodHoundDisplay = resolved,
+                        IngestCacheDisplay = resolved,
                         ComputerSamAccountName = netbios,
                         ObjectType = "computer"
                     };
@@ -1009,7 +1009,7 @@ namespace Sharphound2.Enumeration
                     var innerTimer = Stopwatch.StartNew();
                     var innerElapse = new System.Timers.Timer {Interval = 30000};
 
-                    innerElapse.Elapsed += (sender, args) => { Console.WriteLine($"Still processing {resolved.ObjectType} - {resolved.BloodHoundDisplay}: {innerTimer.ElapsedMilliseconds  / 1000}s"); };
+                    innerElapse.Elapsed += (sender, args) => { Console.WriteLine($"Still processing {resolved.ObjectType} - {resolved.IngestCacheDisplay}: {innerTimer.ElapsedMilliseconds  / 1000}s"); };
                     innerElapse.AutoReset = true;
                     innerTimer.Start();
                     innerElapse.Start();
@@ -1022,7 +1022,7 @@ namespace Sharphound2.Enumeration
                     {
                         var obj = new User
                         {
-                            Name = resolved.BloodHoundDisplay
+                            Name = resolved.IngestCacheDisplay
                         };
 
                         obj.Properties.Add("domain", domain);
@@ -1042,7 +1042,7 @@ namespace Sharphound2.Enumeration
                     {
                         var obj = new Group
                         {
-                            Name = resolved.BloodHoundDisplay
+                            Name = resolved.IngestCacheDisplay
                         };
 
                         if (sid.EndsWith("-512") || sid.EndsWith("-516") || sid.EndsWith("-519") ||
@@ -1071,7 +1071,7 @@ namespace Sharphound2.Enumeration
                     {
                         var obj = new Computer
                         {
-                            Name = resolved.BloodHoundDisplay,
+                            Name = resolved.IngestCacheDisplay,
                             LocalAdmins = new LocalMember[]{},
                             RemoteDesktopUsers = new LocalMember[]{}
                         };
@@ -1089,7 +1089,7 @@ namespace Sharphound2.Enumeration
                             {
                                 _entDcs.Enqueue(new GroupMember
                                 {
-                                    MemberName = resolved.BloodHoundDisplay,
+                                    MemberName = resolved.IngestCacheDisplay,
                                     MemberType = "computer"
                                 });
                             }
@@ -1099,7 +1099,7 @@ namespace Sharphound2.Enumeration
                         GroupHelpers.GetGroupInfo(entry, resolved, domainSid, ref obj);
                         AclHelpers.GetObjectAces(entry, resolved, ref obj);
 
-                        if (!_utils.PingHost(resolved.BloodHoundDisplay))
+                        if (!_utils.PingHost(resolved.IngestCacheDisplay))
                         {
                             Interlocked.Increment(ref _noPing);
                         }
@@ -1183,12 +1183,11 @@ namespace Sharphound2.Enumeration
                     {
                         var obj = new Domain
                         {
-                            Name = resolved.BloodHoundDisplay
+                            Name = resolved.IngestCacheDisplay
                         };
 
                         obj.Properties.Add("objectsid", sid);
                         obj.Properties.Add("highvalue", true);
-                        obj.Properties.Add("domain", domain);
 
                         ObjectPropertyHelpers.GetProps(entry, resolved, ref obj);
                         AclHelpers.GetObjectAces(entry, resolved, ref obj);
@@ -1203,12 +1202,11 @@ namespace Sharphound2.Enumeration
                     {
                         var obj = new Gpo
                         {
-                            Name = resolved.BloodHoundDisplay,
+                            Name = resolved.IngestCacheDisplay,
                             Guid = entry.GetProp("name").Replace("{", "").Replace("}", "")
                         };
 
                         obj.Properties.Add("highvalue", false);
-                        obj.Properties.Add("domain", domain);
 
                         AclHelpers.GetObjectAces(entry, resolved, ref obj);
                         ObjectPropertyHelpers.GetProps(entry, resolved, ref obj);
@@ -1232,9 +1230,8 @@ namespace Sharphound2.Enumeration
                             Guid = new Guid(entry.GetPropBytes("objectguid")).ToString().ToUpper()
                         };
 
-                        obj.Properties.Add("name", resolved.BloodHoundDisplay.ToUpper());
+                        obj.Properties.Add("name", resolved.IngestCacheDisplay.ToUpper());
                         obj.Properties.Add("highvalue", false);
-                        obj.Properties.Add("domain", domain);
 
                         ContainerHelpers.ResolveContainer(entry, resolved, ref obj);
                         ObjectPropertyHelpers.GetProps(entry, resolved, ref obj);
@@ -1248,7 +1245,7 @@ namespace Sharphound2.Enumeration
                     innerTimer.Stop();
                     if (innerTimer.ElapsedMilliseconds > 30000)
                     {
-                        Console.WriteLine($"Finished {resolved.BloodHoundDisplay}");
+                        Console.WriteLine($"Finished {resolved.IngestCacheDisplay}");
                     }
 
                     innerElapse.Stop();

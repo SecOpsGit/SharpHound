@@ -16,11 +16,11 @@ using System.Threading;
 using System.Threading.Tasks;
 using Heijden.DNS;
 using ICSharpCode.SharpZipLib.Zip;
-using Sharphound2.Enumeration;
+using Ingestor.Enumeration;
 using SearchOption = System.DirectoryServices.Protocols.SearchOption;
 using SearchScope = System.DirectoryServices.Protocols.SearchScope;
 
-namespace Sharphound2
+namespace Ingestor
 {
     internal class Utils
     {
@@ -33,7 +33,7 @@ namespace Sharphound2
         private static readonly ConcurrentDictionary<string, bool> _sqlCache = new ConcurrentDictionary<string, bool>();
 
         private readonly TimeSpan _pingTimeout;
-        private static Sharphound.Options _options;
+        private static Ingestor.Options _options;
         private static readonly Random Rnd = new Random();
         private readonly List<string> _domainList;
         private readonly Cache _cache;
@@ -44,7 +44,7 @@ namespace Sharphound2
 
         private static readonly List<string> UsedFiles = new List<string>();
 
-        public static void CreateInstance(Sharphound.Options cli)
+        public static void CreateInstance(Ingestor.Options cli)
         {
             Instance = new Utils(cli);
             _fileTimeStamp = $"{DateTime.Now:yyyyMMddHHmmss}";
@@ -68,7 +68,7 @@ namespace Sharphound2
             }
         }
 
-        public Utils(Sharphound.Options cli)
+        public Utils(Ingestor.Options cli)
         {
             _options = cli;
             _cache = Cache.Instance;
@@ -134,34 +134,31 @@ namespace Sharphound2
                 return dnsHostName;
             }
 
-            if ((_options.ResolvedCollMethods & ResolvedCollectionMethod.DCOnly) == 0)
+            var data = IntPtr.Zero;
+            var t = Task<int>.Factory.StartNew(() => NetWkstaGetInfo(ip, 100, out data));
+            var success = t.Wait(TimeSpan.FromSeconds(3));
+
+            if (success)
             {
-                var data = IntPtr.Zero;
-                var t = Task<int>.Factory.StartNew(() => NetWkstaGetInfo(ip, 100, out data));
-                var success = t.Wait(TimeSpan.FromSeconds(3));
-
-                if (success)
+                if (t.Result == 0)
                 {
-                    if (t.Result == 0)
+                    var marshalled = (WkstaInfo100)Marshal.PtrToStructure(data, typeof(WkstaInfo100));
+
+                    var dObj = GetDomain(marshalled.lan_group);
+                    if (dObj == null)
                     {
-                        var marshalled = (WkstaInfo100)Marshal.PtrToStructure(data, typeof(WkstaInfo100));
-
-                        var dObj = GetDomain(marshalled.lan_group);
-                        if (dObj == null)
-                        {
-                            _dnsResolveCache.TryAdd(ip, ip);
-                            return ip;
-                        }
-
-                        var domain = dObj.Name;
-                        var nbname = marshalled.computer_name;
-                        var testName = $"{nbname}.{domain}";
-                        _dnsResolveCache.TryAdd(ip, testName);
-                        return testName;
+                        _dnsResolveCache.TryAdd(ip, ip);
+                        return ip;
                     }
+
+                    var domain = dObj.Name;
+                    var nbname = marshalled.computer_name;
+                    var testName = $"{nbname}.{domain}";
+                    _dnsResolveCache.TryAdd(ip, testName);
+                    return testName;
                 }
             }
-            
+
             var resolver = CreateDNSResolver(computerDomain);
 
             if (IPAddress.TryParse(ip, out var parsed))
@@ -188,15 +185,11 @@ namespace Sharphound2
             resolver = new Resolver();
             var newServers = new List<IPEndPoint>();
             var dc = GetUsableDomainController(dObj);
-            if (dc != null)
+            var query = resolver.Query(dc, QType.A);
+            if (query.RecordsA.Length > 0)
             {
-                var query = resolver.Query(dc, QType.A);
-                if (query.RecordsA.Length > 0)
-                {
-                    newServers.Add(new IPEndPoint(query.RecordsA[0].Address, 53));
-                }
+                newServers.Add(new IPEndPoint(query.RecordsA[0].Address, 53));
             }
-            
             foreach (var s in resolver.DnsServers)
             {
                 if (!s.ToString().StartsWith("fec0"))
@@ -217,35 +210,31 @@ namespace Sharphound2
         {
             hostName = hostName.ToUpper();
             if (_dnsResolveCache.TryGetValue(hostName, out var dnsHostName)) return dnsHostName;
+            var data = IntPtr.Zero;
+            var t = Task<int>.Factory.StartNew(() => NetWkstaGetInfo(hostName, 100, out data));
+            var success = t.Wait(TimeSpan.FromSeconds(3));
 
-            if ((_options.ResolvedCollMethods & ResolvedCollectionMethod.DCOnly) == 0)
+            if (success)
             {
-                var data = IntPtr.Zero;
-                var t = Task<int>.Factory.StartNew(() => NetWkstaGetInfo(hostName, 100, out data));
-                var success = t.Wait(TimeSpan.FromSeconds(3));
-
-                if (success)
+                if (t.Result == 0)
                 {
-                    if (t.Result == 0)
+                    var marshalled = (WkstaInfo100)Marshal.PtrToStructure(data, typeof(WkstaInfo100));
+
+                    var dObj = GetDomain(marshalled.lan_group);
+                    if (dObj == null)
                     {
-                        var marshalled = (WkstaInfo100)Marshal.PtrToStructure(data, typeof(WkstaInfo100));
-
-                        var dObj = GetDomain(marshalled.lan_group);
-                        if (dObj == null)
-                        {
-                            _dnsResolveCache.TryAdd(hostName, hostName);
-                            return hostName;
-                        }
-
-                        var domain = dObj.Name;
-                        var nbname = marshalled.computer_name;
-                        var testName = $"{nbname}.{domain}";
-                        _dnsResolveCache.TryAdd(hostName, testName);
-                        return testName;
+                        _dnsResolveCache.TryAdd(hostName, hostName);
+                        return hostName;
                     }
+
+                    var domain = dObj.Name;
+                    var nbname = marshalled.computer_name;
+                    var testName = $"{nbname}.{domain}";
+                    _dnsResolveCache.TryAdd(hostName, testName);
+                    return testName;
                 }
             }
-           
+            
             var domainObj = GetDomain(targetDomain);
             var resolver = CreateDNSResolver(targetDomain);
             
@@ -459,14 +448,14 @@ namespace Sharphound2
         }
 
         /// <summary>
-        /// Converts a SID to the bloodhound display name.
+        /// Converts a SID to the IngestCache display name.
         /// Checks the cache first, and if that fails tries grabbing the object from AD
         /// </summary>
         /// <param name="sid"></param>
         /// <param name="domainName"></param>
         /// <param name="props"></param>
         /// <param name="type"></param>
-        /// <returns>Resolved bloodhound name or null</returns>
+        /// <returns>Resolved IngestCache name or null</returns>
         public string SidToDisplay(string sid, string domainName, string[] props, string type)
         {
             var found = false;
@@ -508,10 +497,10 @@ namespace Sharphound2
             var name = entry.ResolveAdEntry();
             if (name != null)
             {
-                _cache.AddMapValue(sid, type, name.BloodHoundDisplay);
+                _cache.AddMapValue(sid, type, name.IngestCacheDisplay);
             }
             Debug($"Resolved to {name}");
-            return name?.BloodHoundDisplay;
+            return name?.IngestCacheDisplay;
         }
 
         public MappedPrincipal UnknownSidTypeToDisplay(string sid, string domainName, string[] props)
@@ -529,7 +518,7 @@ namespace Sharphound2
             if (resolvedEntry == null)
                 return null;
 
-            var name = resolvedEntry.BloodHoundDisplay;
+            var name = resolvedEntry.IngestCacheDisplay;
             var type = resolvedEntry.ObjectType;
             if (name != null)
             {
@@ -1076,7 +1065,6 @@ namespace Sharphound2
             return info.DomainName;
         }
 
-
         public static string GetJsonFileName(string baseFileName)
         {
             var usedFName = baseFileName;
@@ -1149,7 +1137,7 @@ namespace Sharphound2
                 }
                 else
                 {
-                    usedname = $"{_fileTimeStamp}_BloodHound.zip";
+                    usedname = $"{_fileTimeStamp}_IngestCache.zip";
                 }
             }
             var zipfilepath = GetZipFileName(usedname);

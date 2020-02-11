@@ -1,9 +1,9 @@
 ﻿using System.Collections.Concurrent;
 using System.IO;
 using ProtoBuf;
-using Sharphound2.Enumeration;
+using Ingestor.Enumeration;
 
-namespace Sharphound2
+namespace Ingestor
 {
     internal class Cache
     {
@@ -17,18 +17,18 @@ namespace Sharphound2
 
         public static Cache Instance { get; private set; }
 
-        private readonly Sharphound.Options _options;
+        private readonly Ingestor.Options _options;
 
-        public static void CreateInstance(Sharphound.Options opts)
+        public static void CreateInstance(Ingestor.Options opts)
         {
             Instance = new Cache(opts);
         }
 
-        private Cache(Sharphound.Options opts)
+        private Cache(Ingestor.Options opts)
         {
             _options = opts;
             _fileName = Path.Combine(_options.JsonFolder, _options.CacheFile);
-            var oldFilePath = Path.Combine(_options.JsonFolder, "BloodHound.bin");
+            var oldFilePath = Path.Combine(_options.JsonFolder, "IngestCache.bin");
             if (File.Exists(oldFilePath))
             {
                 File.Move(oldFilePath, _fileName);

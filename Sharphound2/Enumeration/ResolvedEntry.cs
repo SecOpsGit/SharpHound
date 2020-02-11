@@ -1,11 +1,11 @@
-﻿namespace Sharphound2.Enumeration
+﻿namespace Ingestor.Enumeration
 {
     internal class ResolvedEntry
     {
         private string _displayName;
         private string _objecttype;
 
-        public string BloodHoundDisplay
+        public string IngestCacheDisplay
         {
             get => _displayName.ToUpper();
             set => _displayName = value;
@@ -20,7 +20,7 @@
 
         public override string ToString()
         {
-            return $"{BloodHoundDisplay} - {ObjectType}";
+            return $"{IngestCacheDisplay} - {ObjectType}";
         }
     }
 }

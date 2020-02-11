@@ -1,4 +1,4 @@
-﻿namespace Sharphound2.Enumeration
+﻿namespace Ingestor.Enumeration
 {
     internal class MappedPrincipal
     {

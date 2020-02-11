@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace Sharphound2.JsonObjects
+namespace Ingestor.JsonObjects
 {
     class SPNTarget : IEquatable<SPNTarget>
     {

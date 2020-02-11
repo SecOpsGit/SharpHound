@@ -9,10 +9,10 @@ using System.Security.Principal;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Xml.XPath;
-using Sharphound2.JsonObjects;
+using Ingestor.JsonObjects;
 using SearchScope = System.DirectoryServices.Protocols.SearchScope;
 
-namespace Sharphound2.Enumeration
+namespace Ingestor.Enumeration
 {
     internal class ApiFailedException : Exception {}
 
@@ -21,7 +21,7 @@ namespace Sharphound2.Enumeration
     internal static class LocalGroupHelpers
     {
         private static Utils _utils;
-        private static Sharphound.Options _options;
+        private static Ingestor.Options _options;
         private static readonly Regex KeyRegex = new Regex(@"(.+?)\s*=(.*)", RegexOptions.Compiled);
         private static readonly Regex MemberRegex = new Regex(@"\[Group Membership\](.*)(?:\[|$)", RegexOptions.Compiled | RegexOptions.Singleline);
         private static readonly Regex MemberLeftRegex = new Regex(@"(.*(?:S-1-5-32-544|S-1-5-32-555|S-1-5-32-562)__Members)", RegexOptions.Compiled | RegexOptions.IgnoreCase);
@@ -41,7 +41,7 @@ namespace Sharphound2.Enumeration
 
         private static byte[] _sidbytes;
 
-        public static void Init(Sharphound.Options options)
+        public static void Init(Ingestor.Options options)
         {
             _utils = Utils.Instance;
             _options = options;
@@ -53,7 +53,7 @@ namespace Sharphound2.Enumeration
         private static SamEnumerationObject[] NetLocalGroupGetMembers(ResolvedEntry entry, int rid, out string machineSid)
         {
             Utils.Debug("Starting NetLocalGroupGetMembers");
-            var server = new UNICODE_STRING(entry.BloodHoundDisplay);
+            var server = new UNICODE_STRING(entry.IngestCacheDisplay);
             //Connect to the server with the proper access maskes. This gives us our server handle
             var obj = default(OBJECT_ATTRIBUTES);
 
@@ -374,7 +374,7 @@ namespace Sharphound2.Enumeration
                         string domain;
                         try
                         {
-                            var split = string.Join(".", entry.BloodHoundDisplay.Split('.').Skip(1).ToArray());
+                            var split = string.Join(".", entry.IngestCacheDisplay.Split('.').Skip(1).ToArray());
                             domain = split;
                         }
                         catch
@@ -453,7 +453,7 @@ namespace Sharphound2.Enumeration
         //                    //If it's not null, we have an object, yay! Otherwise, meh
         //                    if (entry != null)
         //                    {
-        //                        adminName = entry.ResolveAdEntry().BloodHoundDisplay;
+        //                        adminName = entry.ResolveAdEntry().IngestCacheDisplay;
         //                        _cache.AddMapValue(sidstring, type, adminName);
         //                    }
         //                    else
@@ -756,7 +756,7 @@ namespace Sharphound2.Enumeration
                         if (samAccountType == null || samAccountType != "805306369")
                             continue;
 
-                        var server = compEntry.ResolveAdEntry()?.BloodHoundDisplay;
+                        var server = compEntry.ResolveAdEntry()?.IngestCacheDisplay;
 
                         if (server == null)
                             continue;

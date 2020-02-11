@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.DirectoryServices.Protocols;
 using System.Linq;
 using System.Text;
-using Sharphound2.JsonObjects;
+using Ingestor.JsonObjects;
 
-namespace Sharphound2.Enumeration
+namespace Ingestor.Enumeration
 {
     internal static class SPNHelpers
     {

@@ -7,7 +7,7 @@ using System.Security.Principal;
 using System.Text;
 using Heijden.DNS;
 
-namespace Sharphound2
+namespace Ingestor
 {
     internal class Test
     {

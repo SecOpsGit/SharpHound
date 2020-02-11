@@ -3,7 +3,7 @@ using System.Collections.Concurrent;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
 
-namespace Sharphound2
+namespace Ingestor
 {
     [SuppressMessage("ReSharper", "InconsistentNaming")]
     internal static class DnsManager
@@ -18,6 +18,7 @@ namespace Sharphound2
         /// <returns>Boolean representing if the host exists in DNS</returns>
        internal static bool HostExistsDns(string host, out string name)
         {
+
             if (_dnsCache.TryGetValue(host, out name))
             {
                 return name != null;

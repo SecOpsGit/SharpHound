@@ -6,9 +6,9 @@ using System.Linq;
 using System.Security.Principal;
 using System.Text;
 using Newtonsoft.Json;
-using Sharphound2.Enumeration;
+using Ingestor.Enumeration;
 
-namespace Sharphound2
+namespace Ingestor
 {
     public static class Extensions
     {
@@ -88,21 +88,21 @@ namespace Sharphound2
             {
                 return new ResolvedEntry
                 {
-                    BloodHoundDisplay = $"{temp.PrincipalName}@{domainName}".ToUpper(),
+                    IngestCacheDisplay = $"{temp.PrincipalName}@{domainName}".ToUpper(),
                     ObjectType = temp.ObjectType
                 };
             }
             
             if (Groups.Contains(accountType))
             {
-                entry.BloodHoundDisplay = $"{accountName}@{domainName}".ToUpper();
+                entry.IngestCacheDisplay = $"{accountName}@{domainName}".ToUpper();
                 entry.ObjectType = "group";
                 return entry;
             }
 
             if (Users.Contains(accountType))
             {
-                entry.BloodHoundDisplay = $"{accountName}@{domainName}".ToUpper();
+                entry.IngestCacheDisplay = $"{accountName}@{domainName}".ToUpper();
                 entry.ObjectType = "user";
                 return entry;
             }
@@ -117,7 +117,7 @@ namespace Sharphound2
                     dnshostname = $"{shortName}.{domain}".ToUpper();
                 }
 
-                entry.BloodHoundDisplay = dnshostname;
+                entry.IngestCacheDisplay = dnshostname;
                 entry.ObjectType = "computer";
                 entry.ComputerSamAccountName = shortName;
                 return entry;
@@ -128,21 +128,21 @@ namespace Sharphound2
                 var objClass = result.GetPropArray("objectClass");
                 if (objClass.Contains("groupPolicyContainer"))
                 {
-                    entry.BloodHoundDisplay = $"{result.GetProp("displayname")}@{domainName}";
+                    entry.IngestCacheDisplay = $"{result.GetProp("displayname")}@{domainName}";
                     entry.ObjectType = "gpo";
                     return entry;
                 }
 
                 if (objClass.Contains("organizationalUnit"))
                 {
-                    entry.BloodHoundDisplay = $"{result.GetProp("name")}@{domainName}";
+                    entry.IngestCacheDisplay = $"{result.GetProp("name")}@{domainName}";
                     entry.ObjectType = "ou";
                     return entry;
                 }
 
                 if (objClass.Contains("container"))
                 {
-                    entry.BloodHoundDisplay = domainName;
+                    entry.IngestCacheDisplay = domainName;
                     entry.ObjectType = "container";
                     return entry;
                 }
@@ -152,71 +152,57 @@ namespace Sharphound2
                 if (accountType.Equals("805306370"))
                     return null;
             }
-            entry.BloodHoundDisplay = domainName;
+            entry.IngestCacheDisplay = domainName;
             entry.ObjectType = "domain";
             return entry;
         }
 
-        public static string GetProp(this SearchResultEntry searchResultEntry, string property)
+        public static string GetProp(this SearchResultEntry result, string prop)
         {
-            if (!searchResultEntry.Attributes.Contains(property))
+            if (!result.Attributes.Contains(prop))
                 return null;
 
-            var collection = searchResultEntry.Attributes[property];
-            var lookups = collection.GetValues(typeof(string));
-            if (lookups.Length == 0)
-                return null;
-
-            if (!(lookups[0] is string prop) || prop.Length == 0)
-                return null;
-
-            return prop;
+            return result.Attributes[prop][0].ToString();
         }
 
-        public static byte[] GetPropBytes(this SearchResultEntry searchResultEntry, string property)
+        public static byte[] GetPropBytes(this SearchResultEntry result, string prop)
         {
-            if (!searchResultEntry.Attributes.Contains(property))
+            if (!result.Attributes.Contains(prop))
                 return null;
 
-            var collection = searchResultEntry.Attributes[property];
-            var lookups = collection.GetValues(typeof(byte[]));
-            if (lookups.Length == 0)
-                return null;
-
-            if (!(lookups[0] is byte[] bytes) || bytes.Length == 0)
-                return null;
-
-            return bytes;
+            return result.Attributes[prop][0] as byte[];
         }
 
-        public static string[] GetPropArray(this SearchResultEntry searchResultEntry, string property)
+        public static string[] GetPropArray(this SearchResultEntry result, string prop)
         {
-            if (!searchResultEntry.Attributes.Contains(property))
+            if (!result.Attributes.Contains(prop))
                 return new string[0];
 
-            var values = searchResultEntry.Attributes[property];
-            var strings = values.GetValues(typeof(string));
+            var values = result.Attributes[prop];
 
-            if (!(strings is string[] result))
-                return null;
+            var toreturn = new string[values.Count];
+            for (var i = 0; i < values.Count; i++)
+                toreturn[i] = values[i].ToString();
 
-            return result;
+            return toreturn;
         }
 
         
-        public static string GetSid(this SearchResultEntry searchResultEntry)
+        public static string GetSid(this SearchResultEntry result)
         {
-            if (!searchResultEntry.Attributes.Contains("objectsid"))
+            if (!result.Attributes.Contains("objectsid"))
                 return null;
 
-            var s = searchResultEntry.Attributes["objectsid"].GetValues(typeof(byte[]));
-            if (s.Length == 0)
-                return null;
+            var s = result.Attributes["objectsid"][0];
+            switch (s)
+            {
+                case byte[] b:
+                    return new SecurityIdentifier(b, 0).ToString();
+                case string st:
+                    return new SecurityIdentifier(Encoding.ASCII.GetBytes(st), 0).ToString();
+            }
 
-            if (!(s[0] is byte[] sidBytes) || sidBytes.Length == 0)
-                return null;
-
-            return new SecurityIdentifier(sidBytes, 0).Value;
+            return null;
         }
 
         public static string GetSid(this DirectoryEntry result)

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.Remoting.Channels;
 
-namespace Sharphound2.Enumeration
+namespace Ingestor.Enumeration
 {
     internal class LdapFilter
     {

@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Sharphound2
+namespace Ingestor
 {
     public enum CollectionMethod
     {
@@ -41,7 +41,6 @@ namespace Sharphound2
         SessionLoop = 1 << 10,
         LoggedOnLoop = 1 << 11,
         DCOM = 1 << 12,
-        SPNTargets = 1 << 13,
-        DCOnly = 1 << 14
+        SPNTargets = 1 << 13
     }
 }

@@ -3,7 +3,7 @@
 <#
 .SYNOPSIS
 
-Creates the powershell in-memory version of SharpHound. 
+Creates the powershell in-memory version of Ingestor. 
 Based entirely off Out-CompressedDll by Matthew Graeber (@mattifestation)
 Original script at https://github.com/PowerShellMafia/PowerSploit/blob/master/ScriptModification/Out-CompressedDll.ps1
 #>
@@ -52,7 +52,7 @@ Original script at https://github.com/PowerShellMafia/PowerSploit/blob/master/Sc
 	`$BindingFlags = [Reflection.BindingFlags] "Public,Static"
 	`$a = @()
 	`$Assembly.GetType("Costura.AssemblyLoader", `$false).GetMethod("Attach", `$BindingFlags).Invoke(`$Null, @())
-	`$Assembly.GetType("Sharphound2.Sharphound").GetMethod("InvokeBloodHound").Invoke(`$Null, @(,`$passed))
+	`$Assembly.GetType("Ingestor.Ingestor").GetMethod("InvokeBloodHound").Invoke(`$Null, @(,`$passed))
 "@
 
 	Get-Content $TemplatePath | %{$_ -replace "#ENCODEDCONTENTHERE", $Output}

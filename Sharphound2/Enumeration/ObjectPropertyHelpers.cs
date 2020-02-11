@@ -5,9 +5,9 @@ using System.DirectoryServices.Protocols;
 using System.Linq;
 using System.Security.AccessControl;
 using System.Security.Principal;
-using Sharphound2.JsonObjects;
+using Ingestor.JsonObjects;
 
-namespace Sharphound2.Enumeration
+namespace Ingestor.Enumeration
 {
     internal class ObjectPropertyHelpers
     {

@@ -3,9 +3,9 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.DirectoryServices.Protocols;
 using System.Linq;
-using Sharphound2.JsonObjects;
+using Ingestor.JsonObjects;
 
-namespace Sharphound2.Enumeration
+namespace Ingestor.Enumeration
 {
     internal static class ContainerHelpers
     {
@@ -31,8 +31,8 @@ namespace Sharphound2.Enumeration
             foreach (var entry in _utils.DoSearch("(&(objectCategory=groupPolicyContainer)(name=*)(gpcfilesyspath=*))",
                 SearchScope.Subtree, new[] { "displayname", "name" }, domain))
             {
+                var dName = entry.GetProp("displayname").ToUpper();
                 var name = entry.GetProp("name").ToUpper();
-                var dName = entry.GetProp("displayname")?.ToUpper() ?? name;
                 name = name.Substring(1, name.Length - 2);
                 _gpoCache.TryAdd(name, dName);
             }
@@ -103,11 +103,11 @@ namespace Sharphound2.Enumeration
                 }
                 else if (subResolved.ObjectType.Equals("computer"))
                 {
-                    computers.Add(subResolved.BloodHoundDisplay);
+                    computers.Add(subResolved.IngestCacheDisplay);
                 }
                 else
                 {
-                    users.Add(subResolved.BloodHoundDisplay);
+                    users.Add(subResolved.IngestCacheDisplay);
                 }
             }
 
@@ -177,11 +177,11 @@ namespace Sharphound2.Enumeration
                 }
                 else if (subResolved.ObjectType.Equals("computer"))
                 {
-                    computers.Add(subResolved.BloodHoundDisplay);
+                    computers.Add(subResolved.IngestCacheDisplay);
                 }
                 else
                 {
-                    users.Add(subResolved.BloodHoundDisplay);
+                    users.Add(subResolved.IngestCacheDisplay);
                 }
             }
 
@@ -199,11 +199,11 @@ namespace Sharphound2.Enumeration
                     }
                     if (subResolved.ObjectType.Equals("computer"))
                     {
-                        computers.Add(subResolved.BloodHoundDisplay);
+                        computers.Add(subResolved.IngestCacheDisplay);
                     }
                     else
                     {
-                        users.Add(subResolved.BloodHoundDisplay);
+                        users.Add(subResolved.IngestCacheDisplay);
                     }
                 }
             }

@@ -11,20 +11,20 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Heijden.DNS;
 using Microsoft.Win32;
-using Sharphound2.JsonObjects;
+using Ingestor.JsonObjects;
 
-namespace Sharphound2.Enumeration
+namespace Ingestor.Enumeration
 {
     internal static class SessionHelpers
     {
         private static Cache _cache;
         private static Utils _utils;
-        private static Sharphound.Options _options;
+        private static Ingestor.Options _options;
         private static readonly string[] RegistryProps = {"samaccounttype", "samaccountname", "distinguishedname"};
         private static readonly Regex SidRegex = new Regex(@"S-1-5-21-[0-9]+-[0-9]+-[0-9]+-[0-9]+$", RegexOptions.Compiled);
         private static readonly TimeSpan Timeout = TimeSpan.FromSeconds(10);
 
-        public static void Init(Sharphound.Options opts)
+        public static void Init(Ingestor.Options opts)
         {
             _cache = Cache.Instance;
             _utils = Utils.Instance;
@@ -66,7 +66,7 @@ namespace Sharphound2.Enumeration
                     domainName))
                 {
                     var path = entry.ResolveAdEntry();
-                    paths.TryAdd(path.BloodHoundDisplay, new byte());
+                    paths.TryAdd(path.IngestCacheDisplay, new byte());
                 }
             }
 
@@ -81,7 +81,7 @@ namespace Sharphound2.Enumeration
                 }
                 yield return new ResolvedEntry
                 {
-                    BloodHoundDisplay = path,
+                    IngestCacheDisplay = path,
                     ObjectType = "computer",
                     ComputerSamAccountName = "FAKESTRING"
                 };
@@ -94,14 +94,14 @@ namespace Sharphound2.Enumeration
                 !Utils.IsMethodSet(ResolvedCollectionMethod.SessionLoop))
                 yield break;
             
-            Utils.Debug($"Starting NetSessionEnum for {target.BloodHoundDisplay}");
+            Utils.Debug($"Starting NetSessionEnum for {target.IngestCacheDisplay}");
             var resumeHandle = IntPtr.Zero;
             var si10 = typeof(SESSION_INFO_10);
 
             var entriesRead = 0;
             var ptrInfo = IntPtr.Zero;
 
-            var t = Task<int>.Factory.StartNew(() => NetSessionEnum(target.BloodHoundDisplay, null, null, 10,
+            var t = Task<int>.Factory.StartNew(() => NetSessionEnum(target.IngestCacheDisplay, null, null, 10,
                 out ptrInfo, -1, out entriesRead,
                 out _, ref resumeHandle));
 
@@ -145,7 +145,7 @@ namespace Sharphound2.Enumeration
                     cname = cname.TrimStart('\\');
 
                 if (cname.Equals("[::1]") || cname.Equals("127.0.0.1"))
-                    cname = target.BloodHoundDisplay;
+                    cname = target.IngestCacheDisplay;
 
                 Utils.Debug($"Result Username: {username}");
                 
@@ -258,7 +258,7 @@ namespace Sharphound2.Enumeration
             {
                 sessions.Add(new Session
                 {
-                    ComputerName = target.BloodHoundDisplay,
+                    ComputerName = target.IngestCacheDisplay,
                     UserName = u,
                     Weight = 1
                 });
@@ -287,7 +287,7 @@ namespace Sharphound2.Enumeration
         //    {
         //        sessions.Add(new Session
         //        {
-        //            ComputerName = target.BloodHoundDisplay,
+        //            ComputerName = target.IngestCacheDisplay,
         //            UserName = u,
         //            Weight = 1
         //        });
@@ -306,7 +306,7 @@ namespace Sharphound2.Enumeration
                 var key = RegistryKey.OpenRemoteBaseKey(RegistryHive.Users,
                     Environment.MachineName.Equals(target.ComputerSamAccountName, StringComparison.CurrentCultureIgnoreCase)
                         ? ""
-                        : target.BloodHoundDisplay);
+                        : target.IngestCacheDisplay);
 
                 //Find all the subkeys that match our regex
                 var filtered = key.GetSubKeyNames()
@@ -343,7 +343,7 @@ namespace Sharphound2.Enumeration
             var tWui1 = typeof(WKSTA_USER_INFO_1);
 
             //Call the API to get logged on users
-            var result = NetWkstaUserEnum(entry.BloodHoundDisplay, queryLevel, out IntPtr intPtr, -1, out int entriesRead, out int _, ref resumeHandle);
+            var result = NetWkstaUserEnum(entry.IngestCacheDisplay, queryLevel, out IntPtr intPtr, -1, out int entriesRead, out int _, ref resumeHandle);
 
             //If we don't get 0 or 234 return
             if (result != 0 && result != 234) yield break;

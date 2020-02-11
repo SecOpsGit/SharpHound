@@ -3,10 +3,10 @@ using System.Collections.Generic;
 using System.DirectoryServices.Protocols;
 using System.Linq;
 using System.Reflection;
-using Sharphound2.JsonObjects;
-using GroupMember = Sharphound2.JsonObjects.GroupMember;
+using Ingestor.JsonObjects;
+using GroupMember = Ingestor.JsonObjects.GroupMember;
 
-namespace Sharphound2.Enumeration
+namespace Ingestor.Enumeration
 {
     internal static class GroupHelpers
     {
@@ -25,7 +25,7 @@ namespace Sharphound2.Enumeration
                 return;
 
             var fMembers = new List<GroupMember>();
-            var principalDisplayName = resolved.BloodHoundDisplay;
+            var principalDisplayName = resolved.IngestCacheDisplay;
             var principalDomainName = Utils.ConvertDnToDomain(entry.DistinguishedName);
 
             if (resolved.ObjectType == "group")
@@ -124,10 +124,10 @@ namespace Sharphound2.Enumeration
                                 principal = null;
                             else
                             {
-                                _cache.AddMapValue(dn, resolvedObj.ObjectType, resolvedObj.BloodHoundDisplay);
+                                _cache.AddMapValue(dn, resolvedObj.ObjectType, resolvedObj.IngestCacheDisplay);
                                 principal = new MappedPrincipal
                                 (
-                                    resolvedObj.BloodHoundDisplay,
+                                    resolvedObj.IngestCacheDisplay,
                                     resolvedObj.ObjectType
                                 );
                             }

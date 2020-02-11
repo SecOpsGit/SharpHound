@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Sharphound2.JsonObjects
+namespace Ingestor.JsonObjects
 {
     internal class GroupMember : IEquatable<GroupMember>
     {
